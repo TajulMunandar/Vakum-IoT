@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:vakum/screen/automatic.dart';
 import 'package:vakum/screen/voice.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mqtt_client/mqtt_client.dart';
+import 'package:mqtt_client/mqtt_server_client.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key});
@@ -13,6 +15,70 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  late MqttServerClient client;
+
+  @override
+  void initState() {
+    super.initState();
+    connectToBroker();
+  }
+
+  // Menghubungkan ke broker MQTT
+  void connectToBroker() async {
+    // Tentukan alamat IP broker MQTT dan ID client Anda
+    client = MqttServerClient.withPort(
+        '192.168.187.155', // Alamat server MQTT
+        'flutter_client', // Identifier klien
+        1883 // Nomor port MQTT yang ingin digunakan
+        );
+
+    client.keepAlivePeriod = 60; // Periode keep-alive dalam detik
+    client.setProtocolV311(); // Setel protokol MQTT ke versi 3.1.1
+
+    // Tambahkan fungsi callback untuk mengatur tindakan saat terhubung atau terputus
+    client.onConnected = onConnected;
+    client.onDisconnected = onDisconnected;
+
+    // Hubungkan ke broker MQTT
+    try {
+      await client.connect();
+      print('Connected to MQTT broker');
+    } catch (e) {
+      print('Failed to connect to MQTT broker: $e');
+      print('Client identifier: ${client.clientIdentifier}');
+      print('port: ${client.port}');
+      client.disconnect(); // Lepaskan koneksi jika terjadi kesalahan
+    }
+  }
+
+  void onConnected() {
+    print('Connected to MQTT broker');
+  }
+
+  // Fungsi yang dipanggil saat koneksi terputus
+  void onDisconnected() {
+    print('Disconnected from MQTT broker');
+  }
+
+  // Fungsi untuk mengirim data ke broker MQTT
+  void sendDataToRaspberryPi() {
+    // Pastikan klien MQTT terhubung ke broker
+    if (client.connectionStatus?.state == MqttConnectionState.connected) {
+      final message = 'true'; // Data yang ingin dikirim
+      final topic =
+          'vakum/control'; // Topik yang digunakan untuk mengirim pesan
+
+      final builder = MqttClientPayloadBuilder();
+      builder.addString(message); // Tambahkan pesan ke builder
+
+      // Kirim pesan ke topik
+      client.publishMessage(topic, MqttQos.atLeastOnce, builder.payload!);
+      print('Pesan terkirim: $message ke topik: $topic');
+    } else {
+      print('Gagal mengirim pesan: Tidak terhubung ke broker MQTT');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -32,7 +98,9 @@ class _MainScreenState extends State<MainScreen> {
             }
 
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator()); // Menampilkan loading indicator jika data sedang diambil
+              return Center(
+                  child:
+                      CircularProgressIndicator()); // Menampilkan loading indicator jika data sedang diambil
             }
 
             final status = snapshot.data!.data()!['status'];
@@ -135,6 +203,7 @@ class _MainScreenState extends State<MainScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       if (status) {
+                        sendDataToRaspberryPi();
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -176,5 +245,12 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    // Lepaskan koneksi MQTT saat widget dihapus
+    client.disconnect();
+    super.dispose();
   }
 }
