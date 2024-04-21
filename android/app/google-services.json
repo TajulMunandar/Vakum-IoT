@@ -1,65 +1,26 @@
 {
   "project_info": {
-    "project_number": "103695207287",
-    "project_id": "myapp-70348",
-    "storage_bucket": "myapp-70348.appspot.com"
+    "project_number": "209117327158",
+    "project_id": "vacum-58709",
+    "storage_bucket": "vacum-58709.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:103695207287:android:f93a1c52c17e5ba976ef72",
+        "mobilesdk_app_id": "1:209117327158:android:1778caab89b5dc88ab8d97",
         "android_client_info": {
           "package_name": "com.example.vakum"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "103695207287-6ivog6g7e1oid23p94i685lir30pq3bc.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyCIwXlpRpg-4kEEV3Dam60_gcI_0y-jJ7w"
+          "current_key": "AIzaSyDncscibzuE8NKz-j05DjaUMIWdCLj_1v0"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "103695207287-6ivog6g7e1oid23p94i685lir30pq3bc.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
-        }
-      }
-    },
-    {
-      "client_info": {
-        "mobilesdk_app_id": "1:103695207287:android:5c0eb48698102f3876ef72",
-        "android_client_info": {
-          "package_name": "com.myapp"
-        }
-      },
-      "oauth_client": [
-        {
-          "client_id": "103695207287-6ivog6g7e1oid23p94i685lir30pq3bc.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
-      "api_key": [
-        {
-          "current_key": "AIzaSyCIwXlpRpg-4kEEV3Dam60_gcI_0y-jJ7w"
-        }
-      ],
-      "services": {
-        "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "103695207287-6ivog6g7e1oid23p94i685lir30pq3bc.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

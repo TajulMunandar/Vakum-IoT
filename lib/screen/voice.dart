@@ -113,7 +113,7 @@ class _VoiceState extends State<Voice> {
               StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                 stream: FirebaseFirestore.instance
                     .collection('alat')
-                    .doc('NuXrx2FvKAsUY9oj43Kz')
+                    .doc('jmmAuqXUzmVy0fF207LW')
                     .snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {

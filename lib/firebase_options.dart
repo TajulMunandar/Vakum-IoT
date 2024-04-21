@@ -27,10 +27,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.macOS:
         return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -44,38 +41,49 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyD4BfniqIJPOkOfr8XwiKTR-ldPYUZnH-Y',
-    appId: '1:103695207287:web:4cdb071c7dfee96d76ef72',
-    messagingSenderId: '103695207287',
-    projectId: 'myapp-70348',
-    authDomain: 'myapp-70348.firebaseapp.com',
-    storageBucket: 'myapp-70348.appspot.com',
-    measurementId: 'G-QNGJ7EPWZM',
+    apiKey: 'AIzaSyDDFf4dAY10pjR6biZHXwE1XuTfizCw2g0',
+    appId: '1:209117327158:web:785a8143d96cd5ccab8d97',
+    messagingSenderId: '209117327158',
+    projectId: 'vacum-58709',
+    authDomain: 'vacum-58709.firebaseapp.com',
+    storageBucket: 'vacum-58709.appspot.com',
+    measurementId: 'G-P2L4YBMY3X',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyCIwXlpRpg-4kEEV3Dam60_gcI_0y-jJ7w',
-    appId: '1:103695207287:android:f93a1c52c17e5ba976ef72',
-    messagingSenderId: '103695207287',
-    projectId: 'myapp-70348',
-    storageBucket: 'myapp-70348.appspot.com',
+    apiKey: 'AIzaSyDncscibzuE8NKz-j05DjaUMIWdCLj_1v0',
+    appId: '1:209117327158:android:1778caab89b5dc88ab8d97',
+    messagingSenderId: '209117327158',
+    projectId: 'vacum-58709',
+    storageBucket: 'vacum-58709.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDZjNrp5EGjz1p7pBbGNVADPNhQfn5EGUM',
-    appId: '1:103695207287:ios:7f6d26c2dc0c4fd376ef72',
-    messagingSenderId: '103695207287',
-    projectId: 'myapp-70348',
-    storageBucket: 'myapp-70348.appspot.com',
+    apiKey: 'AIzaSyC2MXropeapFTkcmwnJ_BL0hSp93fYIBZs',
+    appId: '1:209117327158:ios:1145c4f9a4dd6ae0ab8d97',
+    messagingSenderId: '209117327158',
+    projectId: 'vacum-58709',
+    storageBucket: 'vacum-58709.appspot.com',
     iosBundleId: 'com.example.vakum',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDZjNrp5EGjz1p7pBbGNVADPNhQfn5EGUM',
-    appId: '1:103695207287:ios:5c62878ed42a21a176ef72',
-    messagingSenderId: '103695207287',
-    projectId: 'myapp-70348',
-    storageBucket: 'myapp-70348.appspot.com',
-    iosBundleId: 'com.example.vakum.RunnerTests',
+    apiKey: 'AIzaSyC2MXropeapFTkcmwnJ_BL0hSp93fYIBZs',
+    appId: '1:209117327158:ios:1145c4f9a4dd6ae0ab8d97',
+    messagingSenderId: '209117327158',
+    projectId: 'vacum-58709',
+    storageBucket: 'vacum-58709.appspot.com',
+    iosBundleId: 'com.example.vakum',
   );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyDDFf4dAY10pjR6biZHXwE1XuTfizCw2g0',
+    appId: '1:209117327158:web:a69786064951722dab8d97',
+    messagingSenderId: '209117327158',
+    projectId: 'vacum-58709',
+    authDomain: 'vacum-58709.firebaseapp.com',
+    storageBucket: 'vacum-58709.appspot.com',
+    measurementId: 'G-J85GL0NX3C',
+  );
+
 }
