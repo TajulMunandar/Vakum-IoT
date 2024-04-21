@@ -31,7 +31,7 @@ class _VoiceState extends State<Voice> {
         'flutter_client', // Identifier klien
         1883 // Nomor port MQTT yang ingin digunakan
         );
-    
+
     client.keepAlivePeriod = 60; // Periode keep-alive dalam detik
     client.setProtocolV311(); // Setel protokol MQTT ke versi 3.1.1
 
@@ -127,11 +127,16 @@ class _VoiceState extends State<Voice> {
                   // Menampilkan data jika snapshot sudah ada
                   final data = snapshot.data!.data() as Map<String, dynamic>;
                   final status = data['status'];
-                  final nama = '${data['nama']} ${status ? 'On' : 'Off'}';
+                  final cleaning = data['cleaning'];
+                  final nama =
+                      '${data['nama']} ${cleaning ? 'On Progress' : 'On'}';
 
                   // Menggunakan kondisi untuk menampilkan Lottie.asset sesuai dengan status
-                  final lottieAsset =
-                      status ? 'assets/img/on.json' : 'assets/img/off.json';
+                  final lottieAsset = status
+                      ? (cleaning
+                          ? 'assets/img/progress.json'
+                          : 'assets/img/on.json')
+                      : 'assets/img/off.json';
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

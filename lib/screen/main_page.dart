@@ -73,6 +73,7 @@ class _MainScreenState extends State<MainScreen> {
 
       // Kirim pesan ke topik
       client.publishMessage(topic, MqttQos.atLeastOnce, builder.payload!);
+      
       print('Pesan terkirim: $message ke topik: $topic');
     } else {
       print('Gagal mengirim pesan: Tidak terhubung ke broker MQTT');
