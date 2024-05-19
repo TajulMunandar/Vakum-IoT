@@ -27,7 +27,7 @@ class _MainScreenState extends State<MainScreen> {
   void connectToBroker() async {
     // Tentukan alamat IP broker MQTT dan ID client Anda
     client = MqttServerClient.withPort(
-        '192.168.187.155', // Alamat server MQTT
+        '192.168.35.155', // Alamat server MQTT, Harus di ubah kalau IP berubah
         'flutter_client', // Identifier klien
         1883 // Nomor port MQTT yang ingin digunakan
         );
@@ -68,13 +68,17 @@ class _MainScreenState extends State<MainScreen> {
       final topic =
           'vakum/control'; // Topik yang digunakan untuk mengirim pesan
 
+      final currentTime = DateTime.now().millisecondsSinceEpoch / 1000;
+
+      final fullMessage = '$message|$currentTime';
+
       final builder = MqttClientPayloadBuilder();
-      builder.addString(message); // Tambahkan pesan ke builder
+      builder.addString(fullMessage); // Tambahkan pesan ke builder
 
       // Kirim pesan ke topik
       client.publishMessage(topic, MqttQos.atLeastOnce, builder.payload!);
-      
-      print('Pesan terkirim: $message ke topik: $topic');
+
+      print('Pesan terkirim: $fullMessage ke topik: $topic');
     } else {
       print('Gagal mengirim pesan: Tidak terhubung ke broker MQTT');
     }
