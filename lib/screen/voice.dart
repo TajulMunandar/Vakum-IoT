@@ -67,7 +67,30 @@ class _VoiceState extends State<Voice> {
     setState(() {
       result = resultData;
     });
-    sendMessageToRaspberryPi(); // Kirim data suara ke Raspberry Pi
+
+    if (resultData == "maju" ||
+        resultData == "mundur" ||
+        resultData == "kanan" ||
+        resultData == "kiri" ||
+        resultData == "berhenti") {
+      // Lanjutkan dengan mengirim pesan ke Raspberry Pi jika perintah dikenali
+      sendMessageToRaspberryPi();
+    } else {
+      // Tampilkan dialog peringatan jika perintah tidak dikenali
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Peringatan'),
+          content: Text('Suara tidak dikenali.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   // Fungsi untuk mengirim pesan ke Raspberry Pi melalui MQTT
