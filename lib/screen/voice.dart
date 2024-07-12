@@ -37,6 +37,12 @@ class _VoiceState extends State<Voice> {
 
   // Menghubungkan ke broker MQTT
   void connectToBroker() async {
+    // Tentukan alamat IP broker MQTT dan ID client Anda
+    client = MqttServerClient.withPort(
+        '192.168.47.155', // Alamat server MQTT, Harus Berubah Kalau Ip Berubah
+        'flutter_client', // Identifier klien
+        1883 // Nomor port MQTT yang ingin digunakan
+        );
     client =
         MqttServerClient.withPort('192.168.35.155', 'flutter_client', 1883);
 
