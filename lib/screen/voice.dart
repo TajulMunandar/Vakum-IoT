@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:speech_to_text_google_dialog/speech_to_text_google_dialog.dart';
+import 'package:speech_to_text/speech_recognition_result.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 import 'package:lottie/lottie.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -15,68 +16,86 @@ class Voice extends StatefulWidget {
 
 class _VoiceState extends State<Voice> {
   String? result;
+  bool _listening = false;
+  bool _isListening = false;
   late MqttServerClient client;
+  late SpeechToText _speechToText;
+  bool _speechEnabled = false;
 
   @override
   void initState() {
     super.initState();
     connectToBroker(); // Inisialisasi koneksi ke broker MQTT
+    _initSpeech(); // Inisialisasi pengenalan suara
+  }
+
+  void _initSpeech() async {
+    _speechToText = SpeechToText();
+    _speechEnabled = await _speechToText.initialize();
+    setState(() {});
   }
 
   // Menghubungkan ke broker MQTT
   void connectToBroker() async {
-    // Tentukan alamat IP broker MQTT dan ID client Anda
-    client = MqttServerClient.withPort(
-        '192.168.35.155', // Alamat server MQTT, Harus Berubah Kalau Ip Berubah
-        'flutter_client', // Identifier klien
-        1883 // Nomor port MQTT yang ingin digunakan
-        );
+    client =
+        MqttServerClient.withPort('192.168.35.155', 'flutter_client', 1883);
 
-    client.keepAlivePeriod = 60; // Periode keep-alive dalam detik
-    client.setProtocolV311(); // Setel protokol MQTT ke versi 3.1.1
+    client.keepAlivePeriod = 60;
+    client.setProtocolV311();
 
-    // Tambahkan fungsi callback untuk mengatur tindakan saat terhubung atau terputus
     client.onConnected = onConnected;
     client.onDisconnected = onDisconnected;
 
-    // Hubungkan ke broker MQTT
     try {
       await client.connect();
       print('Connected to MQTT broker');
     } catch (e) {
       print('Failed to connect to MQTT broker: $e');
-      print('Client identifier: ${client.clientIdentifier}');
-      print('port: ${client.port}');
-      client.disconnect(); // Lepaskan koneksi jika terjadi kesalahan
+      client.disconnect();
     }
   }
 
-  // Fungsi yang dipanggil saat berhasil terhubung ke broker
   void onConnected() {
     print('Connected to MQTT broker');
   }
 
-  // Fungsi yang dipanggil saat koneksi terputus
   void onDisconnected() {
     print('Disconnected from MQTT broker');
   }
 
-  // Fungsi yang dipanggil saat menerima hasil pengenalan suara
-  void onVoiceResult(dynamic data) {
-    String resultData = data.toString();
-    setState(() {
-      result = resultData;
-    });
+  void onVoiceResult(SpeechRecognitionResult result) {
+    if (result.recognizedWords.isNotEmpty) {
+      setState(() {
+        _listening = false;
+        _isListening = false;
+        this.result = result.recognizedWords;
+      });
 
-    if (resultData == "maju" ||
-        resultData == "mundur" ||
-        resultData == "kanan" ||
-        resultData == "kiri" ||
-        resultData == "berhenti") {
-      // Lanjutkan dengan mengirim pesan ke Raspberry Pi jika perintah dikenali
-      sendMessageToRaspberryPi();
+      print('Recognized words: ${result.recognizedWords}');
+      sendMessageToRaspberryPiIfNeeded();
+    }
+  }
+
+  void sendMessageToRaspberryPiIfNeeded() {
+    if (this.result != null &&
+        (this.result == "maju" ||
+            this.result == "mundur" ||
+            this.result == "kanan" ||
+            this.result == "kiri" ||
+            this.result == "berhenti")) {
+      if (client.connectionStatus?.state == MqttConnectionState.connected) {
+        final message = this.result!;
+        final topic = 'test/topic';
+
+        final builder = MqttClientPayloadBuilder();
+        builder.addString(message);
+
+        client.publishMessage(topic, MqttQos.atLeastOnce, builder.payload!);
+        print('Sent message: $message to topic: $topic');
+      } else {
+        print('Failed to send message: Not connected to MQTT broker');
+      }
     } else {
-      // Tampilkan dialog peringatan jika perintah tidak dikenali
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
@@ -93,18 +112,14 @@ class _VoiceState extends State<Voice> {
     }
   }
 
-  // Fungsi untuk mengirim pesan ke Raspberry Pi melalui MQTT
   void sendMessageToRaspberryPi() {
-    // Pastikan client terhubung ke broker sebelum mengirim pesan
     if (client.connectionStatus?.state == MqttConnectionState.connected) {
-      final message = result ?? ''; // Ambil hasil pengenalan suara
-      final topic = 'test/topic'; // Topik yang digunakan untuk mengirim pesan
+      final message = result ?? '';
+      final topic = 'test/topic';
 
-      // Buat builder payload
       final builder = MqttClientPayloadBuilder();
-      builder.addString(message); // Tambahkan pesan ke builder
+      builder.addString(message);
 
-      // Kirim pesan ke topik yang ditentukan
       client.publishMessage(topic, MqttQos.atLeastOnce, builder.payload!);
       print('Sent message: $message to topic: $topic');
     } else {
@@ -117,7 +132,7 @@ class _VoiceState extends State<Voice> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          color: Color(0xFF222831), // Warna latar belakang yang diinginkan
+          color: Color(0xFF222831),
         ),
         padding: EdgeInsets.symmetric(vertical: 50.0),
         child: Center(
@@ -144,17 +159,15 @@ class _VoiceState extends State<Voice> {
                   }
 
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return CircularProgressIndicator(); // Menampilkan loading indicator jika data sedang diambil
+                    return CircularProgressIndicator();
                   }
 
-                  // Menampilkan data jika snapshot sudah ada
                   final data = snapshot.data!.data() as Map<String, dynamic>;
                   final status = data['status'];
                   final cleaning = data['cleaning'];
                   final nama =
                       '${data['nama']} ${cleaning ? 'On Progress' : 'On'}';
 
-                  // Menggunakan kondisi untuk menampilkan Lottie.asset sesuai dengan status
                   final lottieAsset = status
                       ? (cleaning
                           ? 'assets/img/progress.json'
@@ -194,15 +207,19 @@ class _VoiceState extends State<Voice> {
                 ),
               ),
               GestureDetector(
-                onTap: () async {
-                  // Memulai pengenalan suara saat pengguna mengetuk
-                  bool isServiceAvailable =
-                      await SpeechToTextGoogleDialog.getInstance()
-                          .showGoogleDialog(
-                    onTextReceived: onVoiceResult,
-                    // locale: "en-US",
-                  );
-                  if (!isServiceAvailable) {
+                onTap: () {
+                  if (_speechEnabled && !_isListening) {
+                    setState(() {
+                      _isListening = true;
+                      _listening =
+                          true; // Set _listening true for visual indicator
+                    });
+                    _speechToText.listen(
+                      onResult: (result) => onVoiceResult(result),
+                      listenFor:
+                          Duration(seconds: 5), // Set timeout duration here
+                    );
+                  } else {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: const Text('Service is not available'),
                       backgroundColor: Colors.red,
@@ -215,13 +232,22 @@ class _VoiceState extends State<Voice> {
                     ));
                   }
                 },
-                child: Transform.translate(
-                  offset: Offset(0, 0),
-                  child: Lottie.asset(
-                    'assets/img/audio.json',
-                    width: 450,
-                    fit: BoxFit.fill,
-                  ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Transform.translate(
+                      offset: Offset(0, 0),
+                      child: Lottie.asset(
+                        'assets/img/audio.json',
+                        width: 450,
+                        fit: BoxFit.fill,
+                      ),
+                    ),
+                    if (_listening) // Show visual indicator while listening
+                      CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                  ],
                 ),
               ),
               Center(
@@ -244,7 +270,6 @@ class _VoiceState extends State<Voice> {
 
   @override
   void dispose() {
-    // Lepaskan koneksi MQTT saat widget dihapus
     client.disconnect();
     super.dispose();
   }
