@@ -43,8 +43,6 @@ class _VoiceState extends State<Voice> {
         'flutter_client', // Identifier klien
         1883 // Nomor port MQTT yang ingin digunakan
         );
-    client =
-        MqttServerClient.withPort('192.168.35.155', 'flutter_client', 1883);
 
     client.keepAlivePeriod = 60;
     client.setProtocolV311();
