@@ -27,7 +27,7 @@ class _MainScreenState extends State<MainScreen> {
   void connectToBroker() async {
     // Tentukan alamat IP broker MQTT dan ID client Anda
     client = MqttServerClient.withPort(
-        '192.168.47.155', // Alamat server MQTT, Harus di ubah kalau IP berubah
+        '192.168.165.155', // Alamat server MQTT, Harus di ubah kalau IP berubah
         'flutter_client', // Identifier klien
         1883 // Nomor port MQTT yang ingin digunakan
         );
