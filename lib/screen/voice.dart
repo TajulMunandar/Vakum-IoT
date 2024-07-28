@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -21,6 +22,7 @@ class _VoiceState extends State<Voice> {
   late MqttServerClient client;
   late SpeechToText _speechToText;
   bool _speechEnabled = false;
+  Timer? _listenTimer;
 
   @override
   void initState() {
@@ -76,6 +78,7 @@ class _VoiceState extends State<Voice> {
       });
 
       print('Recognized words: ${result.recognizedWords}');
+      _listenTimer?.cancel(); // Batalkan timer jika ada hasil yang valid
       sendMessageToRaspberryPiIfNeeded();
     }
   }
@@ -116,18 +119,51 @@ class _VoiceState extends State<Voice> {
     }
   }
 
-  void sendMessageToRaspberryPi() {
-    if (client.connectionStatus?.state == MqttConnectionState.connected) {
-      final message = result ?? '';
-      final topic = 'test/topic';
+  void startListening() {
+    if (_speechEnabled && !_isListening) {
+      setState(() {
+        _isListening = true;
+        _listening = true; // Set _listening true for visual indicator
+      });
+      _speechToText.listen(
+        onResult: (result) => onVoiceResult(result),
+        listenFor: Duration(seconds: 5), // Set timeout duration here
+      );
 
-      final builder = MqttClientPayloadBuilder();
-      builder.addString(message);
-
-      client.publishMessage(topic, MqttQos.atLeastOnce, builder.payload!);
-      print('Sent message: $message to topic: $topic');
+      // Mulai timer untuk mendeteksi jika mendengarkan lebih dari 5 detik
+      _listenTimer = Timer(Duration(seconds: 5), () {
+        if (_isListening) {
+          setState(() {
+            _isListening = false;
+            _listening = false;
+          });
+          _speechToText.stop();
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Peringatan'),
+              content: Text('Suara kurang jelas.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+      });
     } else {
-      print('Failed to send message: Not connected to MQTT broker');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: const Text('Service is not available'),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        margin: EdgeInsets.only(
+          bottom: MediaQuery.of(context).size.height - 100,
+          left: 16,
+          right: 16,
+        ),
+      ));
     }
   }
 
@@ -171,26 +207,40 @@ class _VoiceState extends State<Voice> {
                   final cleaning = data['cleaning'];
                   final nama =
                       '${data['nama']} ${cleaning ? 'On Progress' : 'On'}';
+                  final trash = data['debu'];
 
                   final lottieAsset = status
                       ? (cleaning
                           ? 'assets/img/progress.json'
                           : 'assets/img/on.json')
                       : 'assets/img/off.json';
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  return Column(
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 5),
-                        child: Lottie.asset(
-                          lottieAsset,
-                          width: 25,
-                          height: 25,
-                          fit: BoxFit.fill,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(right: 5),
+                            child: Lottie.asset(
+                              lottieAsset,
+                              width: 25,
+                              height: 25,
+                              fit: BoxFit.fill,
+                            ),
+                          ),
+                          Text(
+                            nama,
+                            style: GoogleFonts.montserrat(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
+                      SizedBox(height: 20.0),
                       Text(
-                        nama,
+                        'Sisa Sampah: $trash',
                         style: GoogleFonts.montserrat(
                           color: Colors.white,
                           fontSize: 16,
@@ -211,31 +261,7 @@ class _VoiceState extends State<Voice> {
                 ),
               ),
               GestureDetector(
-                onTap: () {
-                  if (_speechEnabled && !_isListening) {
-                    setState(() {
-                      _isListening = true;
-                      _listening =
-                          true; // Set _listening true for visual indicator
-                    });
-                    _speechToText.listen(
-                      onResult: (result) => onVoiceResult(result),
-                      listenFor:
-                          Duration(seconds: 5), // Set timeout duration here
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: const Text('Service is not available'),
-                      backgroundColor: Colors.red,
-                      behavior: SnackBarBehavior.floating,
-                      margin: EdgeInsets.only(
-                        bottom: MediaQuery.of(context).size.height - 100,
-                        left: 16,
-                        right: 16,
-                      ),
-                    ));
-                  }
-                },
+                onTap: startListening,
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -275,6 +301,7 @@ class _VoiceState extends State<Voice> {
   @override
   void dispose() {
     client.disconnect();
+    _listenTimer?.cancel(); // Batalkan timer saat dispose
     super.dispose();
   }
 }
